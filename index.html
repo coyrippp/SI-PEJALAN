@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Pendataan Kerusakan Jalan - SI-PEJALAN</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="assets/images/logo.png" alt="Logo" height="30" class="d-inline-block align-text-top me-2">
+                SI-PEJALAN
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-page="home">
+                            <i class="fas fa-home me-1"></i> Beranda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="report">
+                            <i class="fas fa-plus-circle me-1"></i> Laporkan Kerusakan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="reports-list">
+                            <i class="fas fa-list me-1"></i> Daftar Laporan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="map-view">
+                            <i class="fas fa-map-marked-alt me-1"></i> Peta
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="dashboard">
+                            <i class="fas fa-chart-bar me-1"></i> Dashboard
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i> Pengguna
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-page="profile">Profil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn">Keluar</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 pt-5">
+        <!-- Home Page -->
+        <div id="home-page" class="page-content">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2>Selamat Datang di SI-PEJALAN</h2>
+                    <p class="lead">Sistem Informasi Pendataan Kerusakan Jalan Berbasis Web</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-primary btn-lg" data-page="report">
+                        <i class="fas fa-plus-circle me-2"></i>Laporkan Kerusakan
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-map-marked-alt me-2"></i> Peta Kerusakan Jalan
+                        </div>
+                        <div class="card-body">
+                            <div id="map-home"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-chart-pie me-2"></i> Statistik Singkat
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h5>Total Laporan</h5>
+                                <h3 class="text-primary" id="total-reports">142</h3>
+                            </div>
+                            <div class="mb-3">
+                                <h5>Dalam Proses</h5>
+                                <h3 class="text-warning" id="progress-reports">24</h3>
+                            </div>
+                            <div class="mb-3">
+                                <h5>Selesai</h5>
+                                <h3 class="text-success" id="completed-reports">98</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-circle me-2"></i> Laporan Terbaru
+                        </div>
+                        <div class="card-body" id="recent-reports">
+                            <!-- Recent reports will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Page -->
+        <div id="report-page" class="page-content hidden">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-plus-circle me-2"></i> Form Pelaporan Kerusakan Jalan
+                        </div>
+                        <div class="card-body">
+                            <form id="report-form">
+                                <div class="mb-3">
+                                    <label for="report-title" class="form-label">Judul Laporan</label>
+                                    <input type="text" class="form-control" id="report-title" placeholder="Contoh: Jalan Berlubang di Jl. Merdeka" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="report-description" class="form-label">Deskripsi Kerusakan</label>
+                                    <textarea class="form-control" id="report-description" rows="3" placeholder="Jelaskan secara detail kondisi kerusakan jalan" required></textarea>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="report-type" class="form-label">Tipe Kerusakan</label>
+                                        <select class="form-select" id="report-type" required>
+                                            <option value="">Pilih Tipe Kerusakan</option>
+                                            <option value="berlubang">Berlubang</option>
+                                            <option value="retak">Retak</option>
+                                            <option value="aus">Permukaan Aus</option>
+                                            <option value="longsor">Longsor</option>
+                                            <option value="lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="report-severity" class="form-label">Tingkat Kerusakan</label>
+                                        <select class="form-select" id="report-severity" required>
+                                            <option value="">Pilih Tingkat Kerusakan</option>
+                                            <option value="ringan">Ringan</option>
+                                            <option value="sedang">Sedang</option>
+                                            <option value="berat">Berat</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Lokasi Kerusakan</label>
+                                    <div id="map-report" style="height: 250px; margin-bottom: 10px;"></div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="report-lat" class="form-label">Latitude</label>
+                                            <input type="text" class="form-control" id="report-lat" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="report-lon" class="form-label">Longitude</label>
+                                            <input type="text" class="form-control" id="report-lon" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="get-location-btn">
+                                            <i class="fas fa-location-arrow me-1"></i>Gunakan Lokasi Saya
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="report-address" class="form-label">Alamat Lengkap</label>
+                                    <textarea class="form-control" id="report-address" rows="2" placeholder="Tuliskan alamat lengkap lokasi kerusakan" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="report-photos" class="form-label">Foto Kerusakan</label>
+                                    <input type="file" class="form-control" id="report-photos" accept="image/*" multiple>
+                                    <div class="form-text">Unggah foto kerusakan jalan (maksimal 5 foto, format JPG/PNG)</div>
+                                    <div id="photo-preview" class="mt-2"></div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-2"></i>Kirim Laporan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports List Page -->
+        <div id="reports-list-page" class="page-content hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Daftar Laporan Kerusakan Jalan</h2>
+                <div>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search-reports" placeholder="Cari laporan...">
+                        <button class="btn btn-primary" type="button" id="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="reports-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Judul</th>
+                                            <th>Tipe</th>
+                                            <th>Tingkat</th>
+                                            <th>Lokasi</th>
+                                            <th>Status</th>
+                                            <th>Tanggal</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reports-table-body">
+                                        <!-- Reports will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center" id="pagination">
+                                    <!-- Pagination will be loaded here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map View Page -->
+        <div id="map-view-page" class="page-content hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Peta Kerusakan Jalan</h2>
+                <div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary active" data-filter="all">Semua</button>
+                        <button type="button" class="btn btn-outline-warning" data-filter="new">Baru</button>
+                        <button type="button" class="btn btn-outline-info" data-filter="progress">Proses</button>
+                        <button type="button" class="btn btn-outline-success" data-filter="completed">Selesai</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div id="map-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page-content hidden">
+            <h2 class="mb-4">Dashboard Monitoring</h2>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="number" id="dashboard-total">142</div>
+                        <div class="label">Total Laporan</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="number" id="dashboard-progress">24</div>
+                        <div class="label">Dalam Proses</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="number" id="dashboard-completed">98</div>
+                        <div class="label">Selesai</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="number" id="dashboard-resolution">72%</div>
+                        <div class="label">Terselesaikan</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-chart-bar me-2"></i> Statistik Laporan per Bulan
+                        </div>
+                        <div class="card-body">
+                            <canvas id="monthlyChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-chart-pie me-2"></i> Distribusi Tipe Kerusakan
+                        </div>
+                        <div class="card-body">
+                            <canvas id="typeChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-list me-2"></i> Laporan Prioritas Tinggi
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group" id="priority-reports">
+                                <!-- Priority reports will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-tasks me-2"></i> Progress Perbaikan
+                        </div>
+                        <div class="card-body" id="repair-progress">
+                            <!-- Repair progress will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Detail Page -->
+        <div id="report-detail-page" class="page-content hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Detail Laporan Kerusakan</h2>
+                <button class="btn btn-outline-secondary" id="back-to-list">
+                    <i class="fas fa-arrow-left me-1"></i>Kembali ke Daftar
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Informasi Laporan</span>
+                            <span class="badge bg-info" id="detail-status">Baru</span>
+                        </div>
+                        <div class="card-body">
+                            <h4 id="detail-title">Jalan Berlubang di Jl. Merdeka</h4>
+                            <p id="detail-description">Terdapat beberapa lubang besar di Jalan Merdeka dekat persimpangan dengan Jalan Sudirman. Lubang tersebut membahayakan pengendara terutama pada malam hari.</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h6>Detail Kerusakan</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Tipe Kerusakan</strong></td>
+                                            <td id="detail-type">Berlubang</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tingkat Kerusakan</strong></td>
+                                            <td><span class="badge bg-warning" id="detail-severity">Sedang</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Lokasi</strong></td>
+                                            <td id="detail-address">Jl. Merdeka No. 45, Jakarta Pusat</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Koordinat</strong></td>
+                                            <td id="detail-coords">-6.200000, 106.816666</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Pelapor</strong></td>
+                                            <td id="detail-reporter">Budi Santoso</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tanggal Lapor</strong></td>
+                                            <td id="detail-date">12 Maret 2023</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Foto Kerusakan</h6>
+                                    <div class="row" id="detail-photos">
+                                        <!-- Photos will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            Timeline & Komentar
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline" id="report-timeline">
+                                <!-- Timeline will be loaded here -->
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6>Tambah Komentar</h6>
+                                <form id="comment-form">
+                                    <div class="mb-2">
+                                        <textarea class="form-control" id="comment-text" rows="3" placeholder="Tulis komentar..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm">Kirim Komentar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            Tindakan
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-warning mb-2" id="assign-btn">
+                                    <i class="fas fa-user-check me-1"></i>Assign Petugas
+                                </button>
+                                <button class="btn btn-info mb-2" id="update-status-btn">
+                                    <i class="fas fa-edit me-1"></i>Update Status
+                                </button>
+                                <button class="btn btn-success mb-2" id="complete-btn">
+                                    <i class="fas fa-check-circle me-1"></i>Tandai Selesai
+                                </button>
+                                <button class="btn btn-outline-danger" id="delete-btn">
+                                    <i class="fas fa-trash me-1"></i>Hapus Laporan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            Lokasi pada Peta
+                        </div>
+                        <div class="card-body">
+                            <div id="map-detail" style="height: 250px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page-content hidden">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-user me-2"></i> Profil Pengguna
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-3 text-center">
+                                    <img src="https://via.placeholder.com/100" class="rounded-circle mb-2" alt="Profile" id="profile-image">
+                                    <button class="btn btn-sm btn-outline-primary" id="change-photo-btn">Ubah Foto</button>
+                                </div>
+                                <div class="col-md-9">
+                                    <h4 id="profile-name">Budi Santoso</h4>
+                                    <p class="text-muted" id="profile-role">Reporter</p>
+                                    <p><i class="fas fa-envelope me-2"></i><span id="profile-email">budi.santoso@email.com</span></p>
+                                    <p><i class="fas fa-phone me-2"></i><span id="profile-phone">+62 812-3456-7890</span></p>
+                                </div>
+                            </div>
+                            
+                            <form id="profile-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="profile-name-input" class="form-label">Nama Lengkap</label>
+                                        <input type="text" class="form-control" id="profile-name-input" value="Budi Santoso">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="profile-email-input" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="profile-email-input" value="budi.santoso@email.com">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="profile-phone-input" class="form-label">Telepon</label>
+                                        <input type="text" class="form-control" id="profile-phone-input" value="+62 812-3456-7890">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="profile-role-input" class="form-label">Peran</label>
+                                        <input type="text" class="form-control" id="profile-role-input" value="Reporter" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="profile-address-input" class="form-label">Alamat</label>
+                                    <textarea class="form-control" id="profile-address-input" rows="3">Jl. Merdeka No. 123, Jakarta Pusat</textarea>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>SI-PEJALAN</h5>
+                    <p>Sistem Informasi Pendataan Kerusakan Jalan Berbasis Web</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Tautan Cepat</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light" data-page="home">Beranda</a></li>
+                        <li><a href="#" class="text-light" data-page="report">Laporkan Kerusakan</a></li>
+                        <li><a href="#" class="text-light" data-page="reports-list">Daftar Laporan</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Kontak</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-2"></i>info@sipejalan.go.id</li>
+                        <li><i class="fas fa-phone me-2"></i>(021) 1234-5678</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i>Jakarta, Indonesia</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="text-center">
+                <p>&copy; 2023 SI-PEJALAN. Hak Cipta Dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Masuk ke SI-PEJALAN</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="login-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="login-password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember-me">
+                            <label class="form-check-label" for="remember-me">Ingat saya</label>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Masuk</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <p class="small">Belum punya akun? <a href="#" class="text-primary">Daftar di sini</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filter Laporan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filter-form">
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-status-new" value="new" checked>
+                                    <label class="form-check-label" for="filter-status-new">Baru</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-status-progress" value="progress" checked>
+                                    <label class="form-check-label" for="filter-status-progress">Dalam Proses</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-status-completed" value="completed" checked>
+                                    <label class="form-check-label" for="filter-status-completed">Selesai</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tingkat Kerusakan</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-severity-low" value="low" checked>
+                                    <label class="form-check-label" for="filter-severity-low">Ringan</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-severity-medium" value="medium" checked>
+                                    <label class="form-check-label" for="filter-severity-medium">Sedang</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="filter-severity-high" value="high" checked>
+                                    <label class="form-check-label" for="filter-severity-high">Berat</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tipe Kerusakan</label>
+                            <select class="form-select" id="filter-type">
+                                <option value="">Semua Tipe</option>
+                                <option value="berlubang">Berlubang</option>
+                                <option value="retak">Retak</option>
+                                <option value="aus">Permukaan Aus</option>
+                                <option value="longsor">Longsor</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" id="filter-date-from">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" id="filter-date-to">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="apply-filter">Terapkan Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="data/sample-data.js"></script>
+    <script src="assets/js/map.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/forms.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
