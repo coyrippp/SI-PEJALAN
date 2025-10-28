@@ -1,0 +1,24 @@
+{
+  "name": "si-pejalan",
+  "version": "1.0.0",
+  "description": "Sistem Informasi Pendataan Kerusakan Jalan Berbasis Web",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=3000",
+    "build": "echo 'No build process needed for static site'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "road",
+    "damage",
+    "reporting",
+    "system",
+    "information",
+    "web"
+  ],
+  "author": "Tim Pengembang SI-PEJALAN",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
